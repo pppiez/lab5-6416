@@ -45,14 +45,23 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 //uint8_t RxBuffer[20];
 //uint8_t TxBuffer[40];
-uint8_t RxBuffer[1];
+uint8_t RxBuffer[2];
 uint8_t TxBuffer[20];
 
 uint8_t Answer[20];
-uint8_t Flag = 0;
+uint8_t Input = 0;
+uint8_t Flag = 10;
+uint8_t BackupFlag = 0;
+uint8_t Mode = 10;
 
-uint8_t flag1[] = "Your input : 1\r\n";
+uint8_t flag[] = "Your input : 1\r\n";
 uint8_t mode1[] = "You are in mode Button Status\r\n";
+uint8_t mode0[] = "You are in mode LED Control\r\n";
+uint8_t mainmenu[] = "Back to main menu\r\n";
+uint8_t back[] = "Back to main menu\r\n";
+uint8_t incorrect[] = "Incorrect input try again\r\n";
+uint8_t unpress[] = "Unpress Button\r\n";
+uint8_t press[] = "Press Button\r\n";
 
 /* USER CODE END PV */
 
@@ -63,6 +72,10 @@ static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void DummyTask();
 void UARTInterruptConfig();
+void AssignMode();
+void MainMenu();
+void Sorting();
+void ButtonStatus();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -130,15 +143,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//	  DummyTask();
-	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_0);
-	if(Flag == 49){
-//	  sprintf((char*)TxBuffer, "Your flag: %s\r\n", RxBuffer);
-//	  HAL_UART_Transmit_IT(&huart2, TxBuffer, strlen((char*)TxBuffer));
-	  HAL_UART_Transmit(&huart2, flag1, sizeof(flag1), sizeof(flag1)-1);
-	  HAL_UART_Transmit(&huart2, mode1, sizeof(mode1), sizeof(mode1)-1);
-	  Flag = 0;
-	}
+	  AssignMode();
+	  Sorting();
   }
   /* USER CODE END 3 */
 }
@@ -240,11 +246,11 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : B1_Pin */
-  GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  /*Configure GPIO pin : PC13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : LD2_Pin */
   GPIO_InitStruct.Pin = LD2_Pin;
@@ -276,73 +282,96 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	if(huart == &huart2)
 	{
-		// (for string only) Add string stop symbol \0 to end string
-//		RxBuffer[1] = '\0';
+		RxBuffer[1] = '\0';
+
+		Input = RxBuffer[0];
 
 		// return received char
-//		sprintf((char*)TxBuffer, "Your input: %s\r\n", RxBuffer);
+		sprintf((char*)TxBuffer, "Your input: %s\r\n", RxBuffer);
 //		HAL_UART_Transmit_IT(&huart2, TxBuffer, strlen((char*)TxBuffer));
+		HAL_UART_Transmit(&huart2, TxBuffer, sizeof(TxBuffer), sizeof(TxBuffer)-1);
 
-		Flag = *RxBuffer;
+		Input = RxBuffer[0];
+
+		if((Input != 48) | (Input != 49) | (Input != 97) |(Input != 100) |(Input != 115) | (Input != 120)){
+			Flag = 3;
+		}
 
 		// recall Receive
-//		HAL_UART_Receive_IT(&huart2, RxBuffer, 1);
+		HAL_UART_Receive_IT(&huart2, RxBuffer, 1);
+
+	}
+}
+void AssignMode()
+{
+	// mode 0
+	if((Input== 48) |(Input == 97) | (Input == 100) | (Input == 115)){
+		Flag = 0;
+		Input = 0;
+	}
+	// mode 1
+	else if(Input == 49){
+		Flag = 1;
+		Input = 0;
+	}
+	// back
+	else if(Input == 120){
+		Flag =  2;
+		Input = 0;
+	}
+//	else{ // incorrect
+//		Flag = 3;
+//	}
+}
+
+void Sorting()
+{
+	switch(Flag){
+	case 0:
+		HAL_UART_Transmit(&huart2, mode0, sizeof(mode0), sizeof(mode0)-1);
+		Flag = 10;
+	break;
+
+	case 1:
+		HAL_UART_Transmit(&huart2, mode1, sizeof(mode1), sizeof(mode1)-1);
+		ButtonStatus();
+		Flag = 10;
+	break;
+
+	case 2:
+		HAL_UART_Transmit(&huart2, back, sizeof(back), sizeof(back)-1);
+		MainMenu();
+		Flag = 10;
+	break;
+
+	case 3:
+		HAL_UART_Transmit(&huart2, incorrect, sizeof(incorrect), sizeof(incorrect)-1);
+		Flag = 10;
+	break;
 
 	}
 }
 
+void MainMenu(){
+	  uint8_t select[] = "Please select mode\r\n";
+	  uint8_t menu0[] = " -> 0 : LED Control\r\n";
+	  uint8_t menu1[] = " -> 1 : Button Status\r\n";
+	  HAL_UART_Transmit(&huart2, select, sizeof(select), sizeof(select)-1);
+	  HAL_UART_Transmit(&huart2, menu0, sizeof(menu0), sizeof(menu0)-1);
+	  HAL_UART_Transmit(&huart2, menu1, sizeof(menu1), sizeof(menu1)-1);
+}
+
+
 // mode buttonStatus
-//void ButtonStatus(uint8_t Flag)
-//{
-//    //Use Static to Preserved data
-//    static enum {INIT,HSRCLK,LSRCLK,HRCLK} SRState = INIT;
-//    static uint8_t SegPosition = 0;
-//    static uint8_t DigitOut = 0;
-//    switch(SRState)
-//    {
-//        case INIT: //init all pin that use to send data
-//            SRCLK = 0;
-//            RCLK = 0;
-//            SER = 0;
-//            SegPosition = 0; // initial 7-segment position
-//            DigitOut = I8bitIn; //Copy number to a temporary variable
-//
-//            SRState = LSRCLK; //Goto next stage
-//        break;
-//
-//        case LSRCLK: // change SER output
-//            SRCLK = 0;
-//            RCLK = 0;
-//
-//            //Output 1 bit to SER(D3) using bitwise operation
-//            // SER = (DigitOut>>SegPosition)&0x01;
-//            SER = (DigitOut>>SegPosition)&0b00000001;
-//
-//
-//            SRState = HSRCLK;
-//        break;
-//
-//        case HSRCLK: // rising SRCLK to sent data to 74hc595
-//            SRCLK = 1;
-//            RCLK = 0;
-//
-//            SegPosition++;
-//
-//            if(SegPosition>=6)
-//            {
-//                SRState = HRCLK;
-//            }
-//            else
-//            {
-//                SRState = LSRCLK;
-//            }
-//        break;
-//
-//        case HRCLK: //rising RCLK to send new output
-//
-//        break;
-//    }
-//}
+void ButtonStatus()
+{
+	if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)){
+	  HAL_UART_Transmit(&huart2, unpress, sizeof(unpress), sizeof(unpress)-1);
+	}
+	else{
+	  HAL_UART_Transmit(&huart2, press, sizeof(press), sizeof(press)-1);
+	}
+}
 /* USER CODE END 4 */
 
 /**
