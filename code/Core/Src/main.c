@@ -21,7 +21,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stdio.h"
+#include "string.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -42,6 +43,16 @@
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+//uint8_t RxBuffer[20];
+//uint8_t TxBuffer[40];
+uint8_t RxBuffer[1];
+uint8_t TxBuffer[20];
+
+uint8_t Answer[20];
+uint8_t Flag = 0;
+
+uint8_t flag1[] = "Your input : 1\r\n";
+uint8_t mode1[] = "You are in mode Button Status\r\n";
 
 /* USER CODE END PV */
 
@@ -50,7 +61,8 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
-
+void DummyTask();
+void UARTInterruptConfig();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -88,7 +100,27 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+  uint8_t line[] = "__________________________\r\n";
+  HAL_UART_Transmit(&huart2, line, sizeof(line), sizeof(line)-1);
 
+  uint8_t inblock[] = "                          \r\n";
+  HAL_UART_Transmit(&huart2, inblock, sizeof(inblock), sizeof(inblock)-1);
+
+  uint8_t welcome[] = "   Welcome to main menu!  \r\n";
+  HAL_UART_Transmit(&huart2, welcome, sizeof(welcome), sizeof(welcome)-1);
+
+  HAL_UART_Transmit(&huart2, line, sizeof(line), sizeof(line)-1);
+  HAL_UART_Transmit(&huart2, inblock, sizeof(inblock), sizeof(inblock)-1);
+
+  uint8_t select[] = "  Please select mode      \r\n";
+  uint8_t menu0[] = " -> 0 : LED Control\r\n";
+  uint8_t menu1[] = " -> 1 : Button Status\r\n";
+  HAL_UART_Transmit(&huart2, select, sizeof(select), sizeof(select)-1);
+  HAL_UART_Transmit(&huart2, menu0, sizeof(menu0), sizeof(menu0)-1);
+  HAL_UART_Transmit(&huart2, menu1, sizeof(menu1), sizeof(menu1)-1);
+
+
+  UARTInterruptConfig();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -98,6 +130,15 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+//	  DummyTask();
+	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_0);
+	if(Flag == 49){
+//	  sprintf((char*)TxBuffer, "Your flag: %s\r\n", RxBuffer);
+//	  HAL_UART_Transmit_IT(&huart2, TxBuffer, strlen((char*)TxBuffer));
+	  HAL_UART_Transmit(&huart2, flag1, sizeof(flag1), sizeof(flag1)-1);
+	  HAL_UART_Transmit(&huart2, mode1, sizeof(mode1), sizeof(mode1)-1);
+	  Flag = 0;
+	}
   }
   /* USER CODE END 3 */
 }
@@ -164,7 +205,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
+  huart2.Init.BaudRate = 57600;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -215,7 +256,93 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+// Blink LED 5 Hzs
+void DummyTask()
+{
+	static uint32_t timestamp = 0;
+	if(HAL_GetTick() >= timestamp){
+		timestamp = HAL_GetTick() + 100;
+		HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+	}
+}
 
+void UARTInterruptConfig()
+{
+	// start UART in interrupt mode
+	HAL_UART_Receive_IT(&huart2, RxBuffer, 1);
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if(huart == &huart2)
+	{
+		// (for string only) Add string stop symbol \0 to end string
+//		RxBuffer[1] = '\0';
+
+		// return received char
+//		sprintf((char*)TxBuffer, "Your input: %s\r\n", RxBuffer);
+//		HAL_UART_Transmit_IT(&huart2, TxBuffer, strlen((char*)TxBuffer));
+
+		Flag = *RxBuffer;
+
+		// recall Receive
+//		HAL_UART_Receive_IT(&huart2, RxBuffer, 1);
+
+	}
+}
+
+// mode buttonStatus
+//void ButtonStatus(uint8_t Flag)
+//{
+//    //Use Static to Preserved data
+//    static enum {INIT,HSRCLK,LSRCLK,HRCLK} SRState = INIT;
+//    static uint8_t SegPosition = 0;
+//    static uint8_t DigitOut = 0;
+//    switch(SRState)
+//    {
+//        case INIT: //init all pin that use to send data
+//            SRCLK = 0;
+//            RCLK = 0;
+//            SER = 0;
+//            SegPosition = 0; // initial 7-segment position
+//            DigitOut = I8bitIn; //Copy number to a temporary variable
+//
+//            SRState = LSRCLK; //Goto next stage
+//        break;
+//
+//        case LSRCLK: // change SER output
+//            SRCLK = 0;
+//            RCLK = 0;
+//
+//            //Output 1 bit to SER(D3) using bitwise operation
+//            // SER = (DigitOut>>SegPosition)&0x01;
+//            SER = (DigitOut>>SegPosition)&0b00000001;
+//
+//
+//            SRState = HSRCLK;
+//        break;
+//
+//        case HSRCLK: // rising SRCLK to sent data to 74hc595
+//            SRCLK = 1;
+//            RCLK = 0;
+//
+//            SegPosition++;
+//
+//            if(SegPosition>=6)
+//            {
+//                SRState = HRCLK;
+//            }
+//            else
+//            {
+//                SRState = LSRCLK;
+//            }
+//        break;
+//
+//        case HRCLK: //rising RCLK to send new output
+//
+//        break;
+//    }
+//}
 /* USER CODE END 4 */
 
 /**
