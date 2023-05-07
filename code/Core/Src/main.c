@@ -48,14 +48,12 @@ uint8_t TxBuffer[20];
 
 uint8_t MyHz[20];
 
-uint8_t Answer[20];
 uint8_t Input = 0;
-uint8_t Flag = 10;
-uint8_t BackupFlag = 0;
 uint8_t OnOff = 0;
 uint32_t Hz = 5;
 uint8_t Mode0Flag = 0;
 uint8_t Mode1Flag = 0;
+uint8_t IncorrectInputFlag = 1;
 
 uint8_t flag[] = "Your input : 1\r\n";
 uint8_t mode1[] = "You are in mode Button Status\r\n";
@@ -69,6 +67,9 @@ uint8_t speedup[] = "Speed Up 1 Hz\r\n";
 uint8_t speeddown[] = "Speed Down 1 Hz\r\n";
 uint8_t onLED[] = "On LED\r\n";
 uint8_t offLED[] = "Off LED\r\n";
+uint8_t selectfirst[] = "Incorrect Input\r\n";
+uint8_t changetomode1[] = "Change to mode LED Control\r\n";
+uint8_t changetomode0[] = "Change to mode Button Status\r\n";
 
 
 // create structure type
@@ -88,7 +89,6 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
-void DummyTask();
 void UARTInterruptConfig();
 void AssignMode();
 void MainMenu();
@@ -96,6 +96,7 @@ void ButtonStatus();
 void LEDControl();
 void BlinkLED();
 void WrongInput();
+void SelectMode();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -315,9 +316,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 		Input = RxBuffer[0];
 
-		if((Input != 48) | (Input != 49) | (Input != 97) |(Input != 100) |(Input != 115) | (Input != 120)){
-			Flag = 3;
-		}
+		IncorrectInputFlag = 0;
 
 		// recall Receive
 		HAL_UART_Receive_IT(&huart2, RxBuffer, 1);
@@ -334,18 +333,31 @@ void AssignMode()
 		Mode1Flag = 0;
 	}
 	// mode 0
-	else if((Input== 48) |(Input == 97) | (Input == 100) | (Input == 115)){
-		Flag = 0;
+//	else if((Input== 48) ||(Input == 97) || (Input == 100) || (Input == 115)){
+	else if((Input== 48)){
+		if(Mode1Flag){
+			HAL_UART_Transmit(&huart2, changetomode1, sizeof(changetomode1), sizeof(changetomode1)-1);
+			Mode1Flag = 0;
+		}
 		LEDControl();
 	}
 	// mode 1
 	else if((Input == 49)){
-		Flag = 1;
+		if(Mode0Flag){
+			HAL_UART_Transmit(&huart2, changetomode0, sizeof(changetomode0), sizeof(changetomode0)-1);
+			Mode0Flag = 0;
+		}
+		else if(Mode1Flag == 0){
+		HAL_UART_Transmit(&huart2, mode1, sizeof(mode1), sizeof(mode1)-1);
+		}
 		ButtonStatus();
 	}
-//	else{ // incorrect
-//		Flag = 3;
-//	}
+	// incorrect input
+	else{
+		if((IncorrectInputFlag == 0) && (Mode0Flag == 0)  && (Mode1Flag == 0)){
+			SelectMode();
+			}
+	}
 }
 
 
@@ -362,7 +374,8 @@ void MainMenu(){
 // mode buttonStatus
 void ButtonStatus()
 {
-  Button1.Current = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
+	Mode1Flag = 1;
+	Button1.Current = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
 
   // detect button press by using failing edge detector
   if(Button1.Last == 0 && Button1.Current == 1)
@@ -440,6 +453,13 @@ void WrongInput(){
 	HAL_UART_Transmit(&huart2, incorrect, sizeof(incorrect), sizeof(incorrect)-1);
 	HAL_UART_Transmit(&huart2, back, sizeof(back), sizeof(back)-1);
 	MainMenu();
+}
+
+void SelectMode(){
+	HAL_UART_Transmit(&huart2, selectfirst, sizeof(selectfirst), sizeof(selectfirst)-1);
+	MainMenu();
+	IncorrectInputFlag = 1;
+	Input = 0;
 }
 /* USER CODE END 4 */
 
