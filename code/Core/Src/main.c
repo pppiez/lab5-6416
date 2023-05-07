@@ -70,6 +70,7 @@ uint8_t selectfirst[] = "Incorrect Input\r\n";
 uint8_t changetomode1[] = "Change to mode LED Control\r\n";
 uint8_t changetomode0[] = "Change to mode Button Status\r\n";
 uint8_t pressx[] = "Press x - Back to main menu\r\n";
+uint8_t inblock[] = "                          \r\n";
 
 
 // create structure type
@@ -136,7 +137,6 @@ int main(void)
   uint8_t line[] = "__________________________\r\n";
   HAL_UART_Transmit(&huart2, line, sizeof(line), sizeof(line)-1);
 
-  uint8_t inblock[] = "                          \r\n";
   HAL_UART_Transmit(&huart2, inblock, sizeof(inblock), sizeof(inblock)-1);
 
   uint8_t welcome[] = "   Welcome to main menu!  \r\n";
@@ -319,9 +319,17 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		{
 			WrongInput();
 		}
+		if((Input == 48) && (Mode1Flag==1)){
+			Input = 0;
+			HAL_UART_Transmit(&huart2, pressx, sizeof(pressx), sizeof(pressx)-1);
+		}
+		if((Input == 49) && (Mode0Flag==1)){
+			Input = 0;
+			HAL_UART_Transmit(&huart2, pressx, sizeof(pressx), sizeof(pressx)-1);
+		}
+
 		// recall Receive
 		HAL_UART_Receive_IT(&huart2, RxBuffer, 1);
-
 	}
 }
 void AssignMode()
@@ -336,12 +344,12 @@ void AssignMode()
 			break;
 		// mode 0
 		case 48:
-				Mode0Flag = 1;
-//				if(Mode1Flag){
-//					HAL_UART_Transmit(&huart2, changetomode1, sizeof(changetomode1), sizeof(changetomode1)-1);
-//					Mode1Flag = 0;
-//				}
-				LEDControl();
+				if(Mode0Flag == 0){
+					Mode0Flag = 1;
+				}
+				if(Mode0Flag == 1){
+					LEDControl();
+				}
 				break;
 		case 97:
 				LEDControl();
@@ -358,11 +366,9 @@ void AssignMode()
 					Mode1Flag = 1;
 					HAL_UART_Transmit(&huart2, mode1, sizeof(mode1), sizeof(mode1)-1);
 				}
-				else if(Mode0Flag){
-					HAL_UART_Transmit(&huart2, pressx, sizeof(pressx), sizeof(pressx)-1);
-					Mode0Flag = 0;
+				if(Mode1Flag == 1){
+					ButtonStatus();
 				}
-				ButtonStatus();
 				break;
 	}
 }
@@ -372,6 +378,7 @@ void MainMenu(){
 	  uint8_t select[] = "Please select mode\r\n";
 	  uint8_t menu0[] = " -> 0 : LED Control\r\n";
 	  uint8_t menu1[] = " -> 1 : Button Status\r\n";
+	  HAL_UART_Transmit(&huart2, inblock, sizeof(inblock), sizeof(inblock)-1);
 	  HAL_UART_Transmit(&huart2, select, sizeof(select), sizeof(select)-1);
 	  HAL_UART_Transmit(&huart2, menu0, sizeof(menu0), sizeof(menu0)-1);
 	  HAL_UART_Transmit(&huart2, menu1, sizeof(menu1), sizeof(menu1)-1);
@@ -386,9 +393,11 @@ void ButtonStatus()
   // detect button press by using failing edge detector
   if(Button1.Last == 0 && Button1.Current == 1)
   {
+	  HAL_UART_Transmit(&huart2, inblock, sizeof(inblock), sizeof(inblock)-1);
 	  HAL_UART_Transmit(&huart2, unpress, sizeof(unpress), sizeof(unpress)-1);
   }
   else if(Button1.Last == 1 && Button1.Current == 0){
+	  HAL_UART_Transmit(&huart2, inblock, sizeof(inblock), sizeof(inblock)-1);
 	  HAL_UART_Transmit(&huart2, press, sizeof(press), sizeof(press)-1);
   }
 
@@ -401,13 +410,17 @@ void LEDControl(){
 
 	switch(Input){
 	case 48:
-		HAL_UART_Transmit(&huart2, mode0, sizeof(mode0), sizeof(mode0)-1);
-		Input = 0;
+		if(Mode0Flag){
+			HAL_UART_Transmit(&huart2, inblock, sizeof(inblock), sizeof(inblock)-1);
+			HAL_UART_Transmit(&huart2, mode0, sizeof(mode0), sizeof(mode0)-1);
+			Input = 0;
+		}
 	break;
 
 	case 97: // speed up + 1 Hz
 		if(Mode0Flag){
 			Hz = Hz + 1;
+			HAL_UART_Transmit(&huart2, inblock, sizeof(inblock), sizeof(inblock)-1);
 			HAL_UART_Transmit(&huart2, speedup, sizeof(speedup), sizeof(speedup)-1);
 			sprintf((char*)MyHz, "LED blink(Hz): %d\r\n", Hz);
 			HAL_UART_Transmit(&huart2, MyHz, sizeof(MyHz), sizeof(MyHz)-1);
@@ -422,12 +435,14 @@ void LEDControl(){
 		if(Mode0Flag){
 			if(OnOff){
 				OnOff = 0;
+				HAL_UART_Transmit(&huart2, inblock, sizeof(inblock), sizeof(inblock)-1);
 				HAL_UART_Transmit(&huart2, offLED, sizeof(offLED), sizeof(offLED)-1);
 				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, 0);
 				Input = 0;
 			}
 			else{
 				OnOff = 1;
+				HAL_UART_Transmit(&huart2, inblock, sizeof(inblock), sizeof(inblock)-1);
 				HAL_UART_Transmit(&huart2, onLED, sizeof(onLED), sizeof(onLED)-1);
 				sprintf((char*)MyHz, "LED blink(Hz): %d\r\n", Hz);
 				HAL_UART_Transmit(&huart2, MyHz, sizeof(MyHz), sizeof(MyHz)-1);
@@ -443,6 +458,7 @@ void LEDControl(){
 		if(Mode0Flag){
 			Hz = Hz - 1;
 				HAL_UART_Transmit(&huart2, speeddown, sizeof(speeddown), sizeof(speeddown)-1);
+				HAL_UART_Transmit(&huart2, inblock, sizeof(inblock), sizeof(inblock)-1);
 				sprintf((char*)MyHz, "LED blink(Hz): %d\r\n", Hz);
 				HAL_UART_Transmit(&huart2, MyHz, sizeof(MyHz), sizeof(MyHz)-1);
 			}
@@ -455,11 +471,9 @@ void LEDControl(){
 }
 
 void WrongInput(){
+	HAL_UART_Transmit(&huart2, inblock, sizeof(inblock), sizeof(inblock)-1);
 	HAL_UART_Transmit(&huart2, incorrect, sizeof(incorrect), sizeof(incorrect)-1);
-//	HAL_UART_Transmit(&huart2, back, sizeof(back), sizeof(back)-1);
-//	MainMenu();
 }
-
 /* USER CODE END 4 */
 
 /**
