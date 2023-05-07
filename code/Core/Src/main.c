@@ -52,9 +52,10 @@ uint8_t Answer[20];
 uint8_t Input = 0;
 uint8_t Flag = 10;
 uint8_t BackupFlag = 0;
-uint8_t Mode = 10;
 uint8_t OnOff = 0;
 uint32_t Hz = 5;
+uint8_t Mode0Flag = 0;
+uint8_t Mode1Flag = 0;
 
 uint8_t flag[] = "Your input : 1\r\n";
 uint8_t mode1[] = "You are in mode Button Status\r\n";
@@ -91,10 +92,10 @@ void DummyTask();
 void UARTInterruptConfig();
 void AssignMode();
 void MainMenu();
-void Sorting();
 void ButtonStatus();
 void LEDControl();
 void BlinkLED();
+void WrongInput();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -283,15 +284,12 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-// Blink LED 5 Hz
+// Blink LED x Hz
 void BlinkLED()
 {
 	static uint32_t timestamp = 0;
 	if(HAL_GetTick() >= timestamp){
 		timestamp = HAL_GetTick() + (Hz*500);
-
-//		timestamp = HAL_GetTick() + GlobalHz;
-//		timestamp = HAL_GetTick() + 500;
 		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 	}
 }
@@ -332,6 +330,8 @@ void AssignMode()
 		HAL_UART_Transmit(&huart2, back, sizeof(back), sizeof(back)-1);
 		MainMenu();
 		Input = 0;
+		Mode0Flag = 0;
+		Mode1Flag = 0;
 	}
 	// mode 0
 	else if((Input== 48) |(Input == 97) | (Input == 100) | (Input == 115)){
@@ -343,43 +343,11 @@ void AssignMode()
 		Flag = 1;
 		ButtonStatus();
 	}
-//	// back
-//	else if(Input == 120){
-//		Flag =  2;
-//		Input = 0;
-//	}
 //	else{ // incorrect
 //		Flag = 3;
 //	}
 }
 
-//void Sorting()
-//{
-//	switch(Flag){
-//	case 0:
-//		HAL_UART_Transmit(&huart2, mode0, sizeof(mode0), sizeof(mode0)-1);
-//		Flag = 10;
-//	break;
-//
-//	case 1:
-//		HAL_UART_Transmit(&huart2, mode1, sizeof(mode1), sizeof(mode1)-1);
-//		ButtonStatus();
-//		Flag = 10;
-//	break;
-//
-//	case 2:
-//		HAL_UART_Transmit(&huart2, back, sizeof(back), sizeof(back)-1);
-//		MainMenu();
-//		Flag = 10;
-//	break;
-//
-//	case 3:
-//		HAL_UART_Transmit(&huart2, incorrect, sizeof(incorrect), sizeof(incorrect)-1);
-//		Flag = 10;
-//	break;
-//
-//	}
-//}
 
 void MainMenu(){
 	  uint8_t select[] = "Please select mode\r\n";
@@ -415,42 +383,64 @@ void LEDControl(){
 	switch(Input){
 	case 48:
 		HAL_UART_Transmit(&huart2, mode0, sizeof(mode0), sizeof(mode0)-1);
+		Mode0Flag = 1;
 		Input = 0;
 	break;
 
 	case 97: // speed up + 1 Hz
-		Hz = Hz + 1;
+		if(Mode0Flag){
+			Hz = Hz + 1;
+			HAL_UART_Transmit(&huart2, speedup, sizeof(speedup), sizeof(speedup)-1);
+			sprintf((char*)MyHz, "LED blink(Hz): %d\r\n", Hz);
+			HAL_UART_Transmit(&huart2, MyHz, sizeof(MyHz), sizeof(MyHz)-1);
+		}
+		else{
+			WrongInput();
+		}
 		Input = 0;
-		HAL_UART_Transmit(&huart2, speedup, sizeof(speedup), sizeof(speedup)-1);
 	break;
 
 	case 100: // On / Off
-		if(OnOff){
-			OnOff = 0;
-			HAL_UART_Transmit(&huart2, offLED, sizeof(offLED), sizeof(offLED)-1);
-		    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, 0);
-			Input = 0;
+		if(Mode0Flag){
+			if(OnOff){
+				OnOff = 0;
+				HAL_UART_Transmit(&huart2, offLED, sizeof(offLED), sizeof(offLED)-1);
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, 0);
+				Input = 0;
+			}
+			else{
+				OnOff = 1;
+				HAL_UART_Transmit(&huart2, onLED, sizeof(onLED), sizeof(onLED)-1);
+				sprintf((char*)MyHz, "LED blink(Hz): %d\r\n", Hz);
+				HAL_UART_Transmit(&huart2, MyHz, sizeof(MyHz), sizeof(MyHz)-1);
+			}
 		}
 		else{
-			OnOff = 1;
-			HAL_UART_Transmit(&huart2, onLED, sizeof(onLED), sizeof(onLED)-1);
-			sprintf((char*)MyHz, "LED blink: %d\r\n", Hz);
-			HAL_UART_Transmit(&huart2, MyHz, sizeof(MyHz), sizeof(MyHz)-1);
-
-			Input = 0;
-
+			WrongInput();
 		}
+		Input = 0;
 	break;
 
 	case 115: // speed down - 1 Hz
-		Hz = Hz - 1;
+		if(Mode0Flag){
+			Hz = Hz - 1;
+				HAL_UART_Transmit(&huart2, speeddown, sizeof(speeddown), sizeof(speeddown)-1);
+				sprintf((char*)MyHz, "LED blink(Hz): %d\r\n", Hz);
+				HAL_UART_Transmit(&huart2, MyHz, sizeof(MyHz), sizeof(MyHz)-1);
+			}
+		else{
+			WrongInput();
+		}
 		Input = 0;
-		HAL_UART_Transmit(&huart2, speeddown, sizeof(speeddown), sizeof(speeddown)-1);
 	break;
 	}
 }
 
-
+void WrongInput(){
+	HAL_UART_Transmit(&huart2, incorrect, sizeof(incorrect), sizeof(incorrect)-1);
+	HAL_UART_Transmit(&huart2, back, sizeof(back), sizeof(back)-1);
+	MainMenu();
+}
 /* USER CODE END 4 */
 
 /**
