@@ -325,43 +325,87 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 }
 void AssignMode()
 {
-	if(Input == 120){
-		HAL_UART_Transmit(&huart2, back, sizeof(back), sizeof(back)-1);
-		MainMenu();
-		Input = 0;
-		Mode0Flag = 0;
-		Mode1Flag = 0;
-	}
-	// mode 0
-//	else if((Input== 48) ||(Input == 97) || (Input == 100) || (Input == 115)){
-	else if((Input== 48)){
-		if(Mode1Flag){
-			HAL_UART_Transmit(&huart2, changetomode1, sizeof(changetomode1), sizeof(changetomode1)-1);
-			Mode1Flag = 0;
-		}
-		LEDControl();
-	}
-	// mode 1
-	else if((Input == 49)){
-		if(Mode0Flag){
-			HAL_UART_Transmit(&huart2, changetomode0, sizeof(changetomode0), sizeof(changetomode0)-1);
+	switch (Input) {
+		case 120:
+			HAL_UART_Transmit(&huart2, back, sizeof(back), sizeof(back)-1);
+			MainMenu();
+			Input = 0;
 			Mode0Flag = 0;
-		}
-		else if(Mode1Flag == 0){
-		HAL_UART_Transmit(&huart2, mode1, sizeof(mode1), sizeof(mode1)-1);
-		}
-		ButtonStatus();
-	}
-	// incorrect input
-	else{
+			Mode1Flag = 0;
+			break;
+		// mode 0
+		case 48:
+			Mode0Flag = 1;
+			if(Mode1Flag){
+				HAL_UART_Transmit(&huart2, changetomode1, sizeof(changetomode1), sizeof(changetomode1)-1);
+				Mode1Flag = 0;
+			}
+			LEDControl();
+			break;
+		case 97:
+				LEDControl();
+				break;
+		case 100:
+				LEDControl();
+				break;
+		case 115:
+				LEDControl();
+				break;
+		// mode 1
+		case 49:
+//				if(Mode0Flag){
+//					HAL_UART_Transmit(&huart2, changetomode0, sizeof(changetomode0), sizeof(changetomode0)-1);
+//					Mode0Flag = 0;
+//				}
+//				else if(Mode1Flag == 0){
+				if(Mode1Flag == 0){
+				Mode1Flag = 1;
+				HAL_UART_Transmit(&huart2, mode1, sizeof(mode1), sizeof(mode1)-1);
+				}
+				ButtonStatus();
+				break;
 		if((IncorrectInputFlag == 0) && (Mode0Flag == 0)  && (Mode1Flag == 0)){
 			SelectMode();
 			}
 	}
+//	if(Input == 120){
+//		HAL_UART_Transmit(&huart2, back, sizeof(back), sizeof(back)-1);
+//		MainMenu();
+//		Input = 0;
+//		Mode0Flag = 0;
+//		Mode1Flag = 0;
+//	}
+	// mode 0
+//	else if((Input== 48) ||(Input == 97) || (Input == 100) || (Input == 115)){
+//	else if((Input== 48)){
+//		if(Mode1Flag){
+//			HAL_UART_Transmit(&huart2, changetomode1, sizeof(changetomode1), sizeof(changetomode1)-1);
+//			Mode1Flag = 0;
+//		}
+//		LEDControl();
+//	}
+	// mode 1
+//	else if((Input == 49)){
+//		if(Mode0Flag){
+//			HAL_UART_Transmit(&huart2, changetomode0, sizeof(changetomode0), sizeof(changetomode0)-1);
+//			Mode0Flag = 0;
+//		}
+//		else if(Mode1Flag == 0){
+//		HAL_UART_Transmit(&huart2, mode1, sizeof(mode1), sizeof(mode1)-1);
+//		}
+//		ButtonStatus();
+//	}
+	// incorrect input
+//	else{
+//		if((IncorrectInputFlag == 0) && (Mode0Flag == 0)  && (Mode1Flag == 0)){
+//			SelectMode();
+//			}
+//	}
 }
 
 
 void MainMenu(){
+		IncorrectInputFlag == 1;
 	  uint8_t select[] = "Please select mode\r\n";
 	  uint8_t menu0[] = " -> 0 : LED Control\r\n";
 	  uint8_t menu1[] = " -> 1 : Button Status\r\n";
@@ -374,7 +418,6 @@ void MainMenu(){
 // mode buttonStatus
 void ButtonStatus()
 {
-	Mode1Flag = 1;
 	Button1.Current = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
 
   // detect button press by using failing edge detector
@@ -396,7 +439,6 @@ void LEDControl(){
 	switch(Input){
 	case 48:
 		HAL_UART_Transmit(&huart2, mode0, sizeof(mode0), sizeof(mode0)-1);
-		Mode0Flag = 1;
 		Input = 0;
 	break;
 
