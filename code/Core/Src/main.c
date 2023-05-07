@@ -43,16 +43,18 @@
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-//uint8_t RxBuffer[20];
-//uint8_t TxBuffer[40];
 uint8_t RxBuffer[2];
 uint8_t TxBuffer[20];
+
+uint8_t MyHz[20];
 
 uint8_t Answer[20];
 uint8_t Input = 0;
 uint8_t Flag = 10;
 uint8_t BackupFlag = 0;
 uint8_t Mode = 10;
+uint8_t OnOff = 0;
+uint32_t Hz = 5;
 
 uint8_t flag[] = "Your input : 1\r\n";
 uint8_t mode1[] = "You are in mode Button Status\r\n";
@@ -62,6 +64,11 @@ uint8_t back[] = "Back to main menu\r\n";
 uint8_t incorrect[] = "Incorrect input try again\r\n";
 uint8_t unpress[] = "Unpress Button\r\n";
 uint8_t press[] = "Press Button\r\n";
+uint8_t speedup[] = "Speed Up 1 Hz\r\n";
+uint8_t speeddown[] = "Speed Down 1 Hz\r\n";
+uint8_t onLED[] = "On LED\r\n";
+uint8_t offLED[] = "Off LED\r\n";
+
 
 // create structure type
 struct _GPIOState
@@ -86,6 +93,8 @@ void AssignMode();
 void MainMenu();
 void Sorting();
 void ButtonStatus();
+void LEDControl();
+void BlinkLED();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -153,9 +162,11 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  AssignMode();
-//	  Sorting();
-  }
+	AssignMode();
+	if(OnOff == 1){
+	BlinkLED();
+	}
+}
   /* USER CODE END 3 */
 }
 
@@ -272,13 +283,16 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-// Blink LED 5 Hzs
-void DummyTask()
+// Blink LED 5 Hz
+void BlinkLED()
 {
 	static uint32_t timestamp = 0;
 	if(HAL_GetTick() >= timestamp){
-		timestamp = HAL_GetTick() + 100;
-		HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+		timestamp = HAL_GetTick() + (Hz*500);
+
+//		timestamp = HAL_GetTick() + GlobalHz;
+//		timestamp = HAL_GetTick() + 500;
+		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 	}
 }
 
@@ -322,7 +336,7 @@ void AssignMode()
 	// mode 0
 	else if((Input== 48) |(Input == 97) | (Input == 100) | (Input == 115)){
 		Flag = 0;
-		Input = 0;
+		LEDControl();
 	}
 	// mode 1
 	else if((Input == 49)){
@@ -396,7 +410,7 @@ void ButtonStatus()
 }
 
 void LEDControl(){
-//	else if((Input== 48) |(Input == 97) | (Input == 100) | (Input == 115)){
+//	static uint32_t Hz = 5;
 
 	switch(Input){
 	case 48:
@@ -405,9 +419,37 @@ void LEDControl(){
 	break;
 
 	case 97: // speed up + 1 Hz
+		Hz = Hz + 1;
+		Input = 0;
+		HAL_UART_Transmit(&huart2, speedup, sizeof(speedup), sizeof(speedup)-1);
+	break;
 
+	case 100: // On / Off
+		if(OnOff){
+			OnOff = 0;
+			HAL_UART_Transmit(&huart2, offLED, sizeof(offLED), sizeof(offLED)-1);
+		    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, 0);
+			Input = 0;
+		}
+		else{
+			OnOff = 1;
+			HAL_UART_Transmit(&huart2, onLED, sizeof(onLED), sizeof(onLED)-1);
+			sprintf((char*)MyHz, "LED blink: %d\r\n", Hz);
+			HAL_UART_Transmit(&huart2, MyHz, sizeof(MyHz), sizeof(MyHz)-1);
+
+			Input = 0;
+
+		}
+	break;
+
+	case 115: // speed down - 1 Hz
+		Hz = Hz - 1;
+		Input = 0;
+		HAL_UART_Transmit(&huart2, speeddown, sizeof(speeddown), sizeof(speeddown)-1);
+	break;
 	}
 }
+
 
 /* USER CODE END 4 */
 
