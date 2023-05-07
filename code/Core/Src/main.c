@@ -63,6 +63,16 @@ uint8_t incorrect[] = "Incorrect input try again\r\n";
 uint8_t unpress[] = "Unpress Button\r\n";
 uint8_t press[] = "Press Button\r\n";
 
+// create structure type
+struct _GPIOState
+{
+	GPIO_PinState Current;
+	GPIO_PinState Last;
+};
+
+// declare variable
+struct _GPIOState Button1;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -144,7 +154,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	  AssignMode();
-	  Sorting();
+//	  Sorting();
   }
   /* USER CODE END 3 */
 }
@@ -304,53 +314,58 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 }
 void AssignMode()
 {
+	if(Input == 120){
+		HAL_UART_Transmit(&huart2, back, sizeof(back), sizeof(back)-1);
+		MainMenu();
+		Input = 0;
+	}
 	// mode 0
-	if((Input== 48) |(Input == 97) | (Input == 100) | (Input == 115)){
+	else if((Input== 48) |(Input == 97) | (Input == 100) | (Input == 115)){
 		Flag = 0;
 		Input = 0;
 	}
 	// mode 1
-	else if(Input == 49){
+	else if((Input == 49)){
 		Flag = 1;
-		Input = 0;
+		ButtonStatus();
 	}
-	// back
-	else if(Input == 120){
-		Flag =  2;
-		Input = 0;
-	}
+//	// back
+//	else if(Input == 120){
+//		Flag =  2;
+//		Input = 0;
+//	}
 //	else{ // incorrect
 //		Flag = 3;
 //	}
 }
 
-void Sorting()
-{
-	switch(Flag){
-	case 0:
-		HAL_UART_Transmit(&huart2, mode0, sizeof(mode0), sizeof(mode0)-1);
-		Flag = 10;
-	break;
-
-	case 1:
-		HAL_UART_Transmit(&huart2, mode1, sizeof(mode1), sizeof(mode1)-1);
-		ButtonStatus();
-		Flag = 10;
-	break;
-
-	case 2:
-		HAL_UART_Transmit(&huart2, back, sizeof(back), sizeof(back)-1);
-		MainMenu();
-		Flag = 10;
-	break;
-
-	case 3:
-		HAL_UART_Transmit(&huart2, incorrect, sizeof(incorrect), sizeof(incorrect)-1);
-		Flag = 10;
-	break;
-
-	}
-}
+//void Sorting()
+//{
+//	switch(Flag){
+//	case 0:
+//		HAL_UART_Transmit(&huart2, mode0, sizeof(mode0), sizeof(mode0)-1);
+//		Flag = 10;
+//	break;
+//
+//	case 1:
+//		HAL_UART_Transmit(&huart2, mode1, sizeof(mode1), sizeof(mode1)-1);
+//		ButtonStatus();
+//		Flag = 10;
+//	break;
+//
+//	case 2:
+//		HAL_UART_Transmit(&huart2, back, sizeof(back), sizeof(back)-1);
+//		MainMenu();
+//		Flag = 10;
+//	break;
+//
+//	case 3:
+//		HAL_UART_Transmit(&huart2, incorrect, sizeof(incorrect), sizeof(incorrect)-1);
+//		Flag = 10;
+//	break;
+//
+//	}
+//}
 
 void MainMenu(){
 	  uint8_t select[] = "Please select mode\r\n";
@@ -365,13 +380,35 @@ void MainMenu(){
 // mode buttonStatus
 void ButtonStatus()
 {
-	if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)){
+  Button1.Current = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
+
+  // detect button press by using failing edge detector
+  if(Button1.Last == 0 && Button1.Current == 1)
+  {
 	  HAL_UART_Transmit(&huart2, unpress, sizeof(unpress), sizeof(unpress)-1);
-	}
-	else{
+  }
+  else if(Button1.Last == 1 && Button1.Current == 0){
 	  HAL_UART_Transmit(&huart2, press, sizeof(press), sizeof(press)-1);
+  }
+
+  // update
+  Button1.Last = Button1.Current;
+}
+
+void LEDControl(){
+//	else if((Input== 48) |(Input == 97) | (Input == 100) | (Input == 115)){
+
+	switch(Input){
+	case 48:
+		HAL_UART_Transmit(&huart2, mode0, sizeof(mode0), sizeof(mode0)-1);
+		Input = 0;
+	break;
+
+	case 97: // speed up + 1 Hz
+
 	}
 }
+
 /* USER CODE END 4 */
 
 /**
