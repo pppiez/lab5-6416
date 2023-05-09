@@ -46,7 +46,7 @@ DMA_HandleTypeDef hdma_usart2_tx;
 
 /* USER CODE BEGIN PV */
 uint8_t RxBuffer[2];
-uint8_t TxBuffer[100];
+uint8_t TxBuffer[120];
 
 uint8_t MyHz[5];
 
@@ -56,23 +56,18 @@ uint32_t Hz = 5;
 uint8_t Mode0Flag = 0;
 uint8_t Mode1Flag = 0;
 
-uint8_t flag[] = "Your input : 1\r\n";
-uint8_t mode1[] = "\r\nYou are in mode Button Status\r\n\r\n";
-uint8_t mode0[] = "You are in mode LED Control\r\n";
-uint8_t mainmenu[] = "\r\nBack to main menu\r\n";
+uint8_t mode1[] = "\r\n\r\nYou are in mode Button Status\r\n -> Press blue button on nucleo board\r\n";
+//uint8_t mode0[] = "\r\n\r\nYou are in mode LED Control\r\n -> a : Speed Up + 1 Hz\r\n -> s : Speed Down - 1 Hz\r\n -> d : On/Off\r\n -> x : Back to main menu \r\n";
+uint8_t mode0[] = "\r\n\r\nYou are in mode LED Control\r\n - a : Speed Up + 1 Hz\r\n - s : Speed Down - 1 Hz\r\n - d : On/Off\r\n - x : Back to main menu\r\n";
 uint8_t back[] = "\r\nBack to main menu\r\n\r\nPlease select mode\r\n -> 0 : LED Control\r\n -> 1 : Button Status\r\n";
 uint8_t incorrect[] = "\r\nIncorrect input try again\r\n";
-uint8_t unpress[] = "\r\nUnpress Button\r\n";
-uint8_t press[] = "\r\nPress Button\r\n";
-uint8_t speedup[] = "\r\nSpeed Up 1 Hz\r\n\r\n";
-uint8_t speeddown[] = "\r\nSpeed Down 1 Hz\r\n\r\n";
-uint8_t onLED[] = "On LED\r\n";
-uint8_t offLED[] = "Off LED\r\n";
+uint8_t unpress[] = "Unpress Button\r\n";
+uint8_t press[] = "Press Button\r\n";
 uint8_t selectfirst[] = "\r\nIncorrect Input\r\n";
 uint8_t pressx[] = "Press x - Back to main menu\r\n";
 uint8_t inblock[] = "                          \r\n";
 
-uint8_t welcome[] = "__________________________\r\n\r\n   Welcome to main menu!  \r\n__________________________\r\n -> 0 : LED Control\r\n -> 1 : Button Status\r\n";
+uint8_t welcome[] = "__________________________\r\n\r\n   Welcome to main menu!  \r\n__________________________\r\n\r\n -> 0 : LED Control\r\n -> 1 : Button Status\r\n";
 
 
 // create structure type
@@ -95,7 +90,6 @@ static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void UARTDMAConfig();
 void AssignMode();
-void MainMenu();
 void ButtonStatus();
 void LEDControl();
 void BlinkLED();
@@ -411,8 +405,7 @@ void LEDControl(){
 	case 97: // speed up + 1 Hz
 		if(Mode0Flag){
 			Hz = Hz + 1;
-			sprintf((char*)TxBuffer, "\r\nSpeed Up 1 Hz\r\n\r\nLED blink(Hz): %d\r\n", Hz);
-			HAL_UART_Transmit_DMA(&huart2, TxBuffer, strlen((char*)TxBuffer));
+			sprintf((char*)TxBuffer, "\r\n\r\nSpeed Up 1 Hz\r\nLED blink(Hz): %d\r\n", Hz);
 			HAL_UART_Transmit_DMA(&huart2, TxBuffer, strlen((char*)TxBuffer));
 		}
 		else{
@@ -425,14 +418,14 @@ void LEDControl(){
 		if(Mode0Flag){
 			if(OnOff){
 				OnOff = 0;
-				sprintf((char*)TxBuffer, "off LED\r\n");
+				sprintf((char*)TxBuffer, "\r\noff LED\r\n");
 				HAL_UART_Transmit_DMA(&huart2, TxBuffer, strlen((char*)TxBuffer));
 				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, 0);
 				Input = 0;
 			}
 			else{
 				OnOff = 1;
-				sprintf((char*)TxBuffer, "on LED\r\nLED blink(Hz): %d\r\n", Hz);
+				sprintf((char*)TxBuffer, "\r\non LED\r\nLED blink(Hz): %d\r\n", Hz);
 				HAL_UART_Transmit_DMA(&huart2, TxBuffer, strlen((char*)TxBuffer));
 
 			}
@@ -446,7 +439,7 @@ void LEDControl(){
 	case 115: // speed down - 1 Hz
 		if(Mode0Flag){
 			Hz = Hz - 1;
-			sprintf((char*)TxBuffer, "\r\nSpeed Down 1 Hz\r\n\r\n LED blink(Hz): %d\r\n", Hz);
+			sprintf((char*)TxBuffer, "\r\n\r\nSpeed Down 1 Hz\r\nLED blink(Hz): %d\r\n", Hz);
 			HAL_UART_Transmit_DMA(&huart2, TxBuffer, strlen((char*)TxBuffer));
 			}
 		else{
