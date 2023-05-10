@@ -46,7 +46,7 @@ DMA_HandleTypeDef hdma_usart2_tx;
 
 /* USER CODE BEGIN PV */
 uint8_t RxBuffer[2];
-uint8_t TxBuffer[120];
+uint8_t TxBuffer[150];
 
 uint8_t MyHz[5];
 
@@ -145,10 +145,15 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	  HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_0);
+
 	  AssignMode();
-	  if(OnOff){
+	  if(OnOff == 1){
 		BlinkLED();
-	}
+	  }
+	  else if(OnOff == 0){
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, 0);
+	  }
+
 }
   /* USER CODE END 3 */
 }
@@ -299,21 +304,18 @@ void UARTDMAConfig()
 {
 	// start UART in DMA mode
 	HAL_UART_Receive_DMA(&huart2, RxBuffer, 1);
+//	HAL_UART_Receive_IT(&huart2, RxBuffer, 1);
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	if(huart == &huart2)
 	{
-		RxBuffer[1] = '\0';
-
 		Input = RxBuffer[0];
 
 		// return received char
 //		sprintf((char*)TxBuffer, "Your input: %s\r\n", RxBuffer);
 //		HAL_UART_Transmit_DMA(&huart2, TxBuffer, sizeof(TxBuffer)-1);
-
-		Input = RxBuffer[0];
 
 		if((Input != 48) && (Input != 49) && (Input != 97) && (Input != 100) && (Input != 115) && (Input != 120))
 		{
@@ -335,16 +337,18 @@ void AssignMode()
 {
 	switch (Input) {
 		case 120:
-			sprintf((char*)TxBuffer, back);
-			HAL_UART_Transmit_DMA(&huart2, TxBuffer, strlen((char*)TxBuffer));
 			Input = 0;
 			Mode0Flag = 0;
 			Mode1Flag = 0;
+			sprintf((char*)TxBuffer, back);
+			HAL_UART_Transmit_DMA(&huart2, TxBuffer, strlen((char*)TxBuffer));
+
 			break;
 		// mode 0
 		case 48:
 				if(Mode0Flag == 0){
 					Mode0Flag = 1;
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, 0);
 				}
 				if(Mode0Flag == 1){
 					LEDControl();
@@ -415,19 +419,18 @@ void LEDControl(){
 	break;
 
 	case 100: // On / Off
-		if(Mode0Flag){
-			if(OnOff){
+		if(Mode0Flag == 1){
+			if(OnOff == 1){
 				OnOff = 0;
 				sprintf((char*)TxBuffer, "\r\noff LED\r\n");
 				HAL_UART_Transmit_DMA(&huart2, TxBuffer, strlen((char*)TxBuffer));
-				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, 0);
 				Input = 0;
 			}
-			else{
+			else if(OnOff == 0){
 				OnOff = 1;
 				sprintf((char*)TxBuffer, "\r\non LED\r\nLED blink(Hz): %d\r\n", Hz);
 				HAL_UART_Transmit_DMA(&huart2, TxBuffer, strlen((char*)TxBuffer));
-
+				Input = 0;
 			}
 		}
 		else{
@@ -452,9 +455,9 @@ void LEDControl(){
 
 void WrongInput(){
 	// Your input: %s
-	sprintf((char*)TxBuffer,"Your input %s \r\nIncorrect input try again\r\n",RxBuffer);
-	HAL_UART_Transmit_DMA(&huart2, TxBuffer, sizeof(TxBuffer));
-
+//	sprintf((char*)TxBuffer,"Your input : %s \r\nIncorrect input try again\r\n",RxBuffer);
+	sprintf((char*)TxBuffer,"Your input : %c \r\nIncorrect input try again\r\n",RxBuffer[0]);
+	HAL_UART_Transmit_DMA(&huart2, TxBuffer, strlen((char*)(TxBuffer)));
 }
 /* USER CODE END 4 */
 
