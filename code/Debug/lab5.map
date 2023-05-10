@@ -2502,9 +2502,9 @@ LOAD c:/st/stm32cubeide_1.11.2/stm32cubeide/plugins/com.st.stm32cube.ide.mcu.ext
  .text.BlinkLED
                 0x0000000008000858       0x48 ./Core/Src/main.o
                 0x0000000008000858                BlinkLED
- .text.UARTDMAConfig
+ .text.UARTInterruptConfig
                 0x00000000080008a0       0x1c ./Core/Src/main.o
-                0x00000000080008a0                UARTDMAConfig
+                0x00000000080008a0                UARTInterruptConfig
  .text.HAL_UART_RxCpltCallback
                 0x00000000080008bc       0x3c ./Core/Src/main.o
                 0x00000000080008bc                HAL_UART_RxCpltCallback
@@ -3278,30 +3278,30 @@ LOAD c:/st/stm32cubeide_1.11.2/stm32cubeide/plugins/com.st.stm32cube.ide.mcu.ext
  .debug_line    0x0000000000005655      0xcf6 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
  .debug_line    0x000000000000634b     0x2a1f ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
 
-.debug_str      0x0000000000000000    0x85e2c
- .debug_str     0x0000000000000000    0x84170 ./Core/Src/main.o
-                                      0x8446f (size before relaxing)
- .debug_str     0x0000000000084170       0xad ./Core/Src/stm32f4xx_hal_msp.o
+.debug_str      0x0000000000000000    0x85e32
+ .debug_str     0x0000000000000000    0x84176 ./Core/Src/main.o
+                                      0x84475 (size before relaxing)
+ .debug_str     0x0000000000084176       0xad ./Core/Src/stm32f4xx_hal_msp.o
                                       0x803f0 (size before relaxing)
- .debug_str     0x000000000008421d      0x132 ./Core/Src/stm32f4xx_it.o
+ .debug_str     0x0000000000084223      0x132 ./Core/Src/stm32f4xx_it.o
                                       0x7fedd (size before relaxing)
- .debug_str     0x000000000008434f      0x4da ./Core/Src/sysmem.o
+ .debug_str     0x0000000000084355      0x4da ./Core/Src/sysmem.o
                                        0x5da3 (size before relaxing)
- .debug_str     0x0000000000084829       0xdb ./Core/Src/system_stm32f4xx.o
+ .debug_str     0x000000000008482f       0xdb ./Core/Src/system_stm32f4xx.o
                                       0x7fa30 (size before relaxing)
- .debug_str     0x0000000000084904       0x36 ./Core/Startup/startup_stm32f411retx.o
+ .debug_str     0x000000000008490a       0x36 ./Core/Startup/startup_stm32f411retx.o
                                          0x65 (size before relaxing)
- .debug_str     0x000000000008493a      0x5ee ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.o
+ .debug_str     0x0000000000084940      0x5ee ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.o
                                       0x8045c (size before relaxing)
- .debug_str     0x0000000000084f28      0x32d ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.o
+ .debug_str     0x0000000000084f2e      0x32d ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.o
                                       0x8017d (size before relaxing)
- .debug_str     0x0000000000085255      0x2f9 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
+ .debug_str     0x000000000008525b      0x2f9 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
                                       0x7fe38 (size before relaxing)
- .debug_str     0x000000000008554e       0xfd ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.o
+ .debug_str     0x0000000000085554       0xfd ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.o
                                       0x7fbab (size before relaxing)
- .debug_str     0x000000000008564b      0x233 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
+ .debug_str     0x0000000000085651      0x233 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
                                       0x7fe64 (size before relaxing)
- .debug_str     0x000000000008587e      0x5ae ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+ .debug_str     0x0000000000085884      0x5ae ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
                                       0x803f1 (size before relaxing)
 
 .comment        0x0000000000000000       0x50

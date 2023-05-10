@@ -80,7 +80,7 @@ static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
-void UARTDMAConfig();
+void UARTInterruptConfig();
 void AssignMode();
 void ButtonStatus();
 void LEDControl();
@@ -125,7 +125,7 @@ int main(void) {
 	/* USER CODE BEGIN 2 */
 	HAL_UART_Transmit_DMA(&huart2, welcome, sizeof(welcome) - 1);
 
-	UARTDMAConfig();
+	UARTInterruptConfig();
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
@@ -283,7 +283,7 @@ void BlinkLED() {
 	}
 }
 
-void UARTDMAConfig() {
+void UARTInterruptConfig() {
 	// start UART in DMA mode
 	HAL_UART_Receive_IT(&huart2, RxBuffer, 1);
 }
