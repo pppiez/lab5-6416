@@ -56,13 +56,8 @@ int8_t Hz = 5;
 uint8_t Mode0Flag = 0;
 uint8_t Mode1Flag = 0;
 
-uint8_t mode1[] =
-		"\r\nYou are in mode Button Status\r\n -> Press blue button on nucleo board\r\n -> x : Back to main menu\r\n__________________________\r\n";
-uint8_t mode0[] =
-		"\r\nYou are in mode LED Control\r\n - a : Speed Up + 1 Hz\r\n - s : Speed Down - 1 Hz\r\n - d : On/Off\r\n - x : Back to main menu\r\n__________________________\r\n";
 uint8_t back[] =
 		"\r\nBack to main menu\r\n\r\nPlease select mode\r\n -> 0 : LED Control\r\n -> 1 : Button Status\r\n__________________________\r\n";
-uint8_t incorrect[] = "\r\nIncorrect input try again\r\n__________________________\r\n";
 uint8_t unpress[] = "Unpress Button\r\n";
 uint8_t press[] = "Press Button\r\n";
 uint8_t welcome[] =
@@ -314,7 +309,7 @@ void AssignMode() {
 		if (Mode0Flag == 0) {
 			Mode0Flag = 1;
 			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, 0);
-			sprintf((char*) TxBuffer, mode0);
+			sprintf((char*) TxBuffer,"\r\nYour input : %c \r\nYou are in mode LED Control\r\n - a : Speed Up + 1 Hz\r\n - s : Speed Down - 1 Hz\r\n - d : On/Off\r\n - x : Back to main menu\r\n__________________________\r\n", RxBuffer[0]);
 			HAL_UART_Transmit_DMA(&huart2, TxBuffer, strlen((char*) TxBuffer));
 		} else {
 			LEDControl();
@@ -325,7 +320,8 @@ void AssignMode() {
 		if (Mode1Flag == 0) {
 			Mode1Flag = 1;
 			Button1.Last = 1;
-			sprintf((char*) TxBuffer, mode1);
+			sprintf((char*) TxBuffer,
+					"\r\nYour input : %c \r\nYou are in mode Button Status\r\n -> Press blue button on nucleo board\r\n -> x : Back to main menu\r\n__________________________\r\n", RxBuffer[0]);
 			HAL_UART_Transmit_DMA(&huart2, TxBuffer, strlen((char*)TxBuffer));
 		}
 	}
@@ -371,7 +367,7 @@ void LEDControl() {
 			HAL_UART_Transmit_DMA(&huart2, TxBuffer, strlen((char*) TxBuffer));
 		} else if (OnOff == 0) {
 			OnOff = 1;
-			sprintf((char*) TxBuffer, "\r\non LED\r\n\r\nLED blink(Hz): %d\r\n\r\nMenu LED Control\r\n - a : Speed Up + 1 Hz\r\n - s : Speed Down - 1 Hz\r\n - d : On/Off\r\n - x : Back to main menu\r\n__________________________\r\n",
+			sprintf((char*) TxBuffer, "\r\non LED\r\nLED blink(Hz): %d\r\n\r\nMenu LED Control\r\n - a : Speed Up + 1 Hz\r\n - s : Speed Down - 1 Hz\r\n - d : On/Off\r\n - x : Back to main menu\r\n__________________________\r\n",
 					Hz);
 			HAL_UART_Transmit_DMA(&huart2, TxBuffer, strlen((char*) TxBuffer));
 		}
@@ -382,22 +378,20 @@ void LEDControl() {
 		if(Hz < 0){
 			Hz = Hz + 1;
 			sprintf((char*) TxBuffer,
-					"\r\n\r\nLED does not blink\r\n\r\nMenu LED Control\r\n - a : Speed Up + 1 Hz\r\n - s : Speed Down - 1 Hz\r\n - d : On/Off\r\n - x : Back to main menu\r\n__________________________\r\n");
+					"\r\nLED does not blink\r\n\r\nMenu LED Control\r\n - a : Speed Up + 1 Hz\r\n - s : Speed Down - 1 Hz\r\n - d : On/Off\r\n - x : Back to main menu\r\n__________________________\r\n");
 			HAL_UART_Transmit_DMA(&huart2, TxBuffer, strlen((char*) TxBuffer));
 		}
 		else if(Hz >= 0){
 			sprintf((char*) TxBuffer,
-					"\r\n\r\nSpeed Down 1 Hz\r\nLED blink(Hz): %d\r\n\r\nMenu LED Control\r\n - a : Speed Up + 1 Hz\r\n - s : Speed Down - 1 Hz\r\n - d : On/Off\r\n - x : Back to main menu\r\n__________________________\r\n", Hz);
+					"\r\nSpeed Down 1 Hz\r\nLED blink(Hz): %d\r\n\r\nMenu LED Control\r\n - a : Speed Up + 1 Hz\r\n - s : Speed Down - 1 Hz\r\n - d : On/Off\r\n - x : Back to main menu\r\n__________________________\r\n", Hz);
 			HAL_UART_Transmit_DMA(&huart2, TxBuffer, strlen((char*) TxBuffer));}
 		break;
 	}
 }
 
 void WrongInput() {
-	// Your input: %s
-//	sprintf((char*)TxBuffer,"Your input : %s \r\nIncorrect input try again\r\n",RxBuffer);
 	sprintf((char*) TxBuffer,
-			"\r\nYour input : %c \r\nIncorrect input try again\r\nPress x : Back to main menu\r\n__________________________\r\n\r\n", RxBuffer[0]);
+			"\r\nYour input : %c \r\nIncorrect input try again\r\nPress x : Back to main menu\r\n__________________________\r\n", RxBuffer[0]);
 	HAL_UART_Transmit_DMA(&huart2, TxBuffer, strlen((char*) (TxBuffer)));
 }
 /* USER CODE END 4 */
