@@ -21,6 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+// Napat Uraisomsurat
 #include "stdio.h"
 #include "string.h"
 /* USER CODE END Includes */
@@ -278,7 +279,7 @@ static void MX_GPIO_Init(void) {
 void BlinkLED() {
 	static uint32_t timestamp = 0;
 	if (HAL_GetTick() >= timestamp) {
-		timestamp = HAL_GetTick() + (Hz * 500);
+		timestamp = HAL_GetTick() + ((1.0/Hz) * 500);
 		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 	}
 }

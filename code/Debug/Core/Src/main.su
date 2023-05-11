@@ -3,7 +3,7 @@
 ../Core/Src/main.c:200:13:MX_USART2_UART_Init	8	static
 ../Core/Src/main.c:229:13:MX_DMA_Init	16	static
 ../Core/Src/main.c:249:13:MX_GPIO_Init	48	static
-../Core/Src/main.c:278:6:BlinkLED	8	static
+../Core/Src/main.c:278:6:BlinkLED	16	static
 ../Core/Src/main.c:286:6:UARTInterruptConfig	8	static
 ../Core/Src/main.c:291:6:HAL_UART_RxCpltCallback	16	static
 ../Core/Src/main.c:300:6:AssignMode	8	static
